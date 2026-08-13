@@ -22,7 +22,8 @@ import {
   Clapperboard 
 } from 'lucide-react';
 import { FALLBACK_MOVIES, Movie } from './data/movies';
-
+import MaskedHeading from './components/MaskedHeading';
+import DepthCarousel from './components/DepthCarousel';
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'discover' | 'watchlist'>('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -277,23 +278,30 @@ export default function App() {
           <div className="space-y-16">
             
             {/* HERO CAROUSEL SECTION */}
-            <section className="relative rounded-3xl overflow-hidden border border-white/10 shadow-xl bg-slate-900 group">
-              <div 
-                className="absolute inset-0 bg-cover bg-center transition-all duration-1000 group-hover:scale-105"
-                style={{ backgroundImage: `url(${currentHeroMovie.backdrop})` }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/70 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0b0f19]/90 via-[#0b0f19]/40 to-transparent sm:w-2/3" />
+            <section className="relative rounded-3xl overflow-hidden border border-white/10 shadow-xl bg-slate-900 min-h-[60vh] flex flex-col justify-end group">
+              <div className="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none">
+                <video src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260411_104032_69319010-2458-492b-b04d-b40a5dfa4482.mp4" autoPlay muted loop playsInline className="w-full h-full object-cover" />
+              </div>
+              <div className="absolute inset-0 z-0 flex items-center justify-center p-8 pointer-events-none">
+                <MaskedHeading
+                  text={currentHeroMovie.title}
+                  mediaType="video"
+                  src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260411_104032_69319010-2458-492b-b04d-b40a5dfa4482.mp4"
+                  fillScale={1.3}
+                  parallax={34}
+                  reveal="wipe"
+                  trigger="mount"
+                  className="w-full h-full drop-shadow-2xl opacity-90"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/70 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0b0f19]/90 via-[#0b0f19]/40 to-transparent sm:w-2/3 pointer-events-none" />
 
               <div className="relative z-10 p-6 sm:p-12 lg:p-16 max-w-2xl space-y-6">
                 <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-purple-300/10 border border-purple-300/20 text-purple-200 text-xs font-semibold backdrop-blur-md">
                   <Sparkles className="h-3.5 w-3.5 text-purple-300" />
                   <span>Featured Release</span>
                 </div>
-
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none drop-shadow-sm">
-                  {currentHeroMovie.title}
-                </h1>
 
                 {currentHeroMovie.tagline && (
                   <p className="text-purple-200/90 font-mono text-xs sm:text-sm italic">
@@ -362,42 +370,26 @@ export default function App() {
                     <Sparkles className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-extrabold text-white">React Bits 3D Motion Carousel</h2>
-                    <p className="text-xs text-slate-400">Interactive 3D component showcase</p>
+                    <h2 className="text-xl font-extrabold text-white">Featured Collection</h2>
+                    <p className="text-xs text-slate-400">Interactive 3D carousel showcase</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono text-purple-200 px-3 py-1 rounded-full bg-purple-300/10 border border-purple-300/20">
-                  Pastel Acrylic UI
-                </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                {FALLBACK_MOVIES.slice(0, 4).map((movie) => (
-                  <motion.div
-                    key={movie.id}
-                    whileHover={{ scale: 1.05, rotateY: 4, y: -6 }}
-                    transition={{ duration: 0.3 }}
-                    onClick={() => setSelectedMovie(movie)}
-                    className="relative rounded-2xl overflow-hidden acrylic-card cursor-pointer group aspect-[2/3]"
-                  >
-                    <img 
-                      src={movie.poster} 
-                      alt={movie.title} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/30 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
-                    
-                    <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[11px] font-bold text-amber-300 flex items-center">
-                      <Star className="h-3 w-3 fill-amber-300 mr-1" />
-                      {movie.rating}
-                    </div>
-
-                    <div className="absolute bottom-3 left-3 right-3 space-y-1">
-                      <h3 className="font-bold text-sm text-white truncate">{movie.title}</h3>
-                      <p className="text-[11px] text-purple-200 font-mono">{movie.genre} • {movie.year}</p>
-                    </div>
-                  </motion.div>
-                ))}
+              <div className="h-[460px] w-full relative">
+                <DepthCarousel
+                  items={FALLBACK_MOVIES.slice(0, 8).map(m => ({ image: m.poster, alt: m.title }))}
+                  depth={220}
+                  spread={90}
+                  tilt={22}
+                  tiltDirection="right"
+                  perspective={1400}
+                  visibleCards={4}
+                  falloff={0.2}
+                  blur={6}
+                  autoplay={true}
+                  loop={true}
+                />
               </div>
             </section>
 

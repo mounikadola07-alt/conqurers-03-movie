@@ -1,0 +1,1124 @@
+<USER_REQUEST>
+https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260411_104032_69319010-2458-492b-b04d-b40a5dfa4482.mp4
+use this as the background and improve hero section by a lot 
+## Integrate the <MaskedHeading /> component from React Bits
+
+You are helping integrate an open-source React component into an existing application.
+
+### Component: MaskedHeading
+### Variant: JavaScript + CSS
+### Dependencies: gsap
+
+---
+
+### Usage Example
+```jsx
+import MaskedHeading from './MaskedHeading';
+
+<MaskedHeading text="Designed in the details" src="/hero.jpg" />
+
+<MaskedHeading
+  text="Shot on location"
+  mediaType="video"
+  src="/reel.mp4"
+  poster="/reel-poster.jpg"
+  fillScale={1.3}
+  parallax={34}
+  reveal="wipe"
+  trigger="view"
+/>
+```
+
+### Props
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| text | string | 'Designed in the details' | Heading copy. |
+| tag | string | 'h2' | Element the heading renders as, so it can carry the right semantics. |
+| mediaType | "image" | "video" | "image" | Whether the source showing through the letters is an image or a looping muted video. |
+| src | string | '' | Image or video URL. |
+| poster | string | '' | Poster frame used while a video loads. |
+| fillScale | number | 1.25 | How far the media is zoomed past the heading. The overscan is what parallax travels into. |
+| parallax | number | 26 | How far the media slides under the letters as the pointer moves, in px. |
+| drift | number | 18 | Amplitude of the slow idle motion, in px. 0 holds the media still. |
+| brightness | number | 1 | Brightness of the media. |
+| saturation | number | 1 | Saturation of the media. |
+| grayscale | boolean | false | Render the media in black and white. |
+| reveal | "rise" | "wipe" | "fade" | "none" | "rise" | Entrance style: words rise into place, a wipe sweeps across, or the whole block fades up. |
+| trigger | "view" | "mount" | "hover" | "view" | When the entrance runs. |
+| duration | number | 1.1 | Entrance duration, in seconds. |
+| stagger | number | 0.09 | Delay between words, in seconds. Used by the rise reveal. |
+| align | "left" | "center" | "right" | "center" | Text alignment. |
+| weight | number | 700 | Font weight. |
+| tracking | number | -0.03 | Letter spacing, in em. |
+| lineHeight | number | 1.06 | Line height. |
+| textScale | number | 0.115 | Type size as a fraction of the container width, so the heading stays responsive. |
+| className | string | '' | Additional class names. |
+| style | object | — | Inline styles for the heading. |
+
+### Full Component Source
+```jsx
+import { useCallback, useEffect, useId, useMemo, useRef } from 'react';
+import { gsap } from 'gsap';
+
+import './MaskedHeading.css';
+
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+
+const MaskedHeading = ({
+  text = 'Designed in the details',
+  tag = 'h2',
+  mediaType = 'image',
+  src = '',
+  poster = '',
+  fillScale = 1.25,
+  parallax = 26,
+  drift = 18,
+  brightness = 1,
+  saturation = 1,
+  grayscale = false,
+  reveal = 'rise',
+  duration = 1.1,
+  stagger = 0.09,
+  trigger = 'view',
+  align = 'center',
+  weight = 700,
+  tracking = -0.03,
+  lineHeight = 1.06,
+  textScale = 0.115,
+  className = '',
+  style,
+  ...rest
+}) => {
+  const rootRef = useRef(null);
+  const measureRef = useRef(null);
+  const revealRef = useRef(null);
+  const mediaRef = useRef(null);
+  const wordRefs = useRef([]);
+  const baseRefs = useRef([]);
+  const glyphRefs = useRef([]);
+  const tweenRef = useRef(null);
+  const offsetRef = useRef({ x: 0, y: 0, tx: 0, ty: 0 });
+
+  const clipId = `mh-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const words = useMemo(() => String(text).split(/\s+/).filter(Boolean), [text]);
+
+  const settingsRef = useRef({});
+  settingsRef.current = { fillScale, parallax, drift, brightness, saturation, grayscale, textScale };
+
+  const place = useCallback(() => {
+    const root = rootRef.current;
+    const media = mediaRef.current;
+    if (!root || !media) return;
+    const s = settingsRef.current;
+    const W = root.clientWidth;
+    const H = root.clientHeight;
+    const off = offsetRef.current;
+
+    const maxX = Math.max(0, ((s.fillScale - 1) / 2) * W);
+    const maxY = Math.max(0, ((s.fillScale - 1) / 2) * H);
+
+    media.style.transform = `translate3d(${clamp(off.x, -maxX, maxX).toFixed(2)}px, ${clamp(off.y, -maxY, maxY).toFixed(2)}px, 0) scale(${s.fillScale})`;
+    media.style.filter = `brightness(${s.brightness}) saturate(${s.saturation})${s.grayscale ? ' grayscale(1)' : ''}`;
+  }, []);
+
+  const sync = useCallback(() => {
+    const root = rootRef.current;
+    const measure = measureRef.current;
+    if (!root || !measure) return;
+    const s = settingsRef.current;
+
+    root.style.fontSize = `${clamp(root.clientWidth * s.textScale, 20, 200).toFixed(1)}px`;
+
+    const cs = window.getComputedStyle(measure);
+    for (let i = 0; i < wordRefs.current.length; i += 1) {
+      const box = wordRefs.current[i];
+      const base = baseRefs.current[i];
+      const glyph = glyphRefs.current[i];
+      if (!box || !base || !glyph) continue;
+      glyph.setAttribute('x', `${box.offsetLeft}`);
+      glyph.setAttribute('y', `${base.offsetTop}`);
+      glyph.style.fontFamily = cs.fontFamily;
+      glyph.style.fontSize = cs.fontSize;
+      glyph.style.fontWeight = cs.fontWeight;
+      glyph.style.fontStyle = cs.fontStyle;
+      glyph.style.letterSpacing = cs.letterSpacing;
+    }
+    place();
+  }, [place]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(root);
+    if (document.fonts?.ready) document.fonts.ready.then(sync).catch(() => {});
+
+    let raf = 0;
+    let last = performance.now();
+    let clock = 0;
+
+    const frame = now => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      clock += dt;
+      const s = settingsRef.current;
+      const off = offsetRef.current;
+
+      const dx = Math.sin(clock * 0.21) * s.drift;
+      const dy = Math.cos(clock * 0.17) * s.drift * 0.6;
+
+      const ease = 1 - Math.exp(-dt / 0.18);
+      off.x += (off.tx + dx - off.x) * ease;
+      off.y += (off.ty + dy - off.y) * ease;
+
+      place();
+      raf = requestAnimationFrame(frame);
+    };
+
+    const onMove = e => {
+      const s = settingsRef.current;
+      if (s.parallax <= 0) return;
+      const r = root.getBoundingClientRect();
+      const nx = ((e.clientX - r.left) / (r.width || 1)) * 2 - 1;
+      const ny = ((e.clientY - r.top) / (r.height || 1)) * 2 - 1;
+      offsetRef.current.tx = clamp(nx, -1, 1) * -s.parallax;
+      offsetRef.current.ty = clamp(ny, -1, 1) * -s.parallax;
+    };
+
+    const onLeave = () => {
+      offsetRef.current.tx = 0;
+      offsetRef.current.ty = 0;
+    };
+
+    root.addEventListener('pointermove', onMove);
+    root.addEventListener('pointerleave', onLeave);
+    raf = requestAnimationFrame(frame);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      root.removeEventListener('pointermove', onMove);
+      root.removeEventListener('pointerleave', onLeave);
+    };
+  }, [place, sync]);
+
+  useEffect(() => {
+    sync();
+  }, [sync, words, tag, align, weight, tracking, lineHeight, textScale]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const layer = revealRef.current;
+    if (!root || !layer) return;
+    const glyphs = glyphRefs.current.filter(Boolean);
+    if (!glyphs.length) return;
+
+    const riseDistance = () => (parseFloat(window.getComputedStyle(root).fontSize) || 48) * 1.15;
+
+    const settle = () => {
+      gsap.set(glyphs, { y: 0 });
+      gsap.set(layer, { opacity: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0%)' });
+    };
+
+    const rest = () => {
+      if (reveal === 'rise') {
+        gsap.set(glyphs, { y: riseDistance() });
+      } else if (reveal === 'wipe') {
+        gsap.set(layer, { clipPath: 'inset(0% 100% 0% 0%)' });
+      } else if (reveal === 'fade') {
+        gsap.set(layer, { opacity: 0, scale: 1.08 });
+      }
+    };
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reveal === 'none' || reduce) {
+      settle();
+      return;
+    }
+
+    const play = () => {
+      tweenRef.current?.kill();
+      if (reveal === 'rise') {
+        gsap.set(layer, { opacity: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0%)' });
+        tweenRef.current = gsap.fromTo(
+          glyphs,
+          { y: riseDistance() },
+          { y: 0, duration, stagger, ease: 'power4.out', overwrite: 'auto' }
+        );
+      } else if (reveal === 'wipe') {
+        gsap.set(glyphs, { y: 0 });
+        const state = { p: 100 };
+        tweenRef.current = gsap.to(state, {
+          p: 0,
+          duration,
+          ease: 'power3.inOut',
+          overwrite: 'auto',
+          onUpdate: () => {
+            layer.style.clipPath = `inset(0% ${state.p}% 0% 0%)`;
+          }
+        });
+      } else {
+        gsap.set(glyphs, { y: 0 });
+        tweenRef.current = gsap.fromTo(
+          layer,
+          { opacity: 0, scale: 1.08 },
+          { opacity: 1, scale: 1, duration, ease: 'power3.out', overwrite: 'auto' }
+        );
+      }
+    };
+
+    if (trigger === 'hover') {
+      settle();
+      root.addEventListener('pointerenter', play);
+      return () => {
+        root.removeEventListener('pointerenter', play);
+        tweenRef.current?.kill();
+      };
+    }
+
+    if (trigger === 'view') {
+      settle();
+      rest();
+      const io = new IntersectionObserver(
+        entries => {
+          if (entries.some(e => e.isIntersecting)) {
+            play();
+            io.disconnect();
+          }
+        },
+        { threshold: 0.25 }
+      );
+      io.observe(root);
+      return () => {
+        io.disconnect();
+        tweenRef.current?.kill();
+      };
+    }
+
+    play();
+    return () => tweenRef.current?.kill();
+  }, [reveal, trigger, duration, stagger, words]);
+
+  const Tag = tag;
+
+  return (
+    <Tag
+      ref={rootRef}
+      className={`masked-heading ${className}`.trim()}
+      style={{
+        textAlign: align,
+        fontWeight: weight,
+        letterSpacing: `${tracking}em`,
+        lineHeight,
+        ...style
+      }}
+      {...rest}
+    >
+      <span ref={measureRef} className="masked-heading__measure">
+        {words.map((word, i) => (
+          <span
+            key={`${word}-${i}`}
+            ref={el => {
+              wordRefs.current[i] = el;
+            }}
+            className="masked-heading__word"
+          >
+            {word}
+            <i
+              ref={el => {
+                baseRefs.current[i] = el;
+              }}
+              className="masked-heading__baseline"
+            />
+          </span>
+        ))}
+      </span>
+
+      <svg className="masked-heading__defs" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+            {words.map((word, i) => (
+              <text
+                key={`${word}-${i}`}
+                ref={el => {
+                  glyphRefs.current[i] = el;
+                }}
+              >
+                {word}
+              </text>
+            ))}
+          </clipPath>
+        </defs>
+      </svg>
+
+      <span ref={revealRef} className="masked-heading__reveal">
+        <span className="masked-heading__clip" style={{ clipPath: `url(#${clipId})` }}>
+          <span ref={mediaRef} className="masked-heading__media">
+            {mediaType === 'video' ? (
+              <video className="masked-heading__source" src={src} poster={poster} autoPlay muted loop playsInline />
+            ) : (
+              <img className="masked-heading__source" src={src} alt="" draggable={false} />
+            )}
+          </span>
+        </span>
+      </span>
+    </Tag>
+  );
+};
+
+export default MaskedHeading;
+
+```
+
+### Component CSS
+```css
+.masked-heading {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-wrap: balance;
+  -webkit-font-smoothing: antialiased;
+}
+
+.masked-heading__measure {
+  color: transparent;
+}
+
+.masked-heading__word {
+  display: inline-block;
+  white-space: pre;
+}
+
+.masked-heading__word:not(:last-child)::after {
+  content: ' ';
+}
+
+.masked-heading__baseline {
+  display: inline-block;
+  width: 0;
+  height: 0;
+}
+
+.masked-heading__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.masked-heading__reveal {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.masked-heading__clip {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.masked-heading__media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  will-change: transform, filter;
+}
+
+.masked-heading__source {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+```
+
+### Integration Instructions
+1. Install any listed dependencies.
+2. Copy the component source into the appropriate directory in the project.
+3. Import the CSS file alongside the component.
+4. Import and render the component using the usage example above as a starting point.
+5. Adjust props as needed for the specific use case — refer to the props table for all available options.
+
+### More from React Bits
+The full library index, including everything reactbits.dev offers, is at https://reactbits.dev/llms.txt — fetch it if this component is not the right fit or the project needs more pieces.
+
+## Integrate the <DepthCarousel /> component from React Bits
+
+You are helping integrate an open-source React component into an existing application.
+
+### Component: DepthCarousel
+### Variant: JavaScript + CSS
+### Dependencies: gsap
+
+---
+
+### Usage Example
+```jsx
+import DepthCarousel from './DepthCarousel';
+
+const items = [
+  { image: 'https://picsum.photos/seed/a/800/1000', alt: 'One' },
+  { image: 'https://picsum.photos/seed/b/800/1000', alt: 'Two' },
+  { image: 'https://picsum.photos/seed/c/800/1000', alt: 'Three' },
+  { image: 'https://picsum.photos/seed/d/800/1000', alt: 'Four' },
+  { image: 'https://picsum.photos/seed/e/800/1000', alt: 'Five' }
+];
+
+<div style={{ height: '500px', position: 'relative' }}>
+  <DepthCarousel
+    items={items}
+    depth={220}
+    spread={90}
+    tilt={22}
+    tiltDirection="right"
+    perspective={1400}
+    visibleCards={4}
+    falloff={0.2}
+    blur={6}
+    autoplay
+    loop
+  />
+</div>
+```
+
+### Props
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| items | Array<string | { image: string; alt?: string }> | 6 sample images | Slides to display. Pass image URLs or objects with an image URL and alt text. |
+| cardWidth | number | 300 | Width of each card in pixels. |
+| cardHeight | number | 380 | Height of each card in pixels. |
+| radius | number | 18 | Corner rounding of the cards in pixels. |
+| tint | string | "#05060a" | Colour multiplied over cards as they recede, shading the depth of the stack. |
+| depth | number | 220 | Z distance in pixels between each card along the depth rail. Higher values push the stack further back. |
+| spread | number | 90 | Lateral offset in pixels applied per card so the stack fans out to one side. |
+| tilt | number | 22 | Degrees each receding card rotates around the vertical axis, revealing its edge. |
+| tiltDirection | "left" | "right" | "right" | Which side the stack fans and tilts toward. |
+| perspective | number | 1400 | CSS perspective in pixels. Lower values exaggerate the depth foreshortening. |
+| visibleCards | number | 4 | How many cards deep remain visible before further ones fade out. |
+| falloff | number | 0.2 | How quickly brightness, tint and blur ramp up with depth. |
+| blur | number | 6 | Maximum blur in pixels applied to the furthest visible card. |
+| duration | number | 700 | Length of the advance transition in milliseconds. |
+| ease | string | "power3.out" | GSAP easing used for navigation transitions. |
+| autoplay | boolean | false | Auto-advance the carousel, pausing on hover or focus. |
+| autoplayDelay | number | 3200 | Delay between auto-advances in milliseconds. |
+| loop | boolean | true | Wrap seamlessly from the last card back to the first. |
+| showControls | boolean | true | Show the previous / next arrow buttons. |
+| showIndicators | boolean | true | Show the dot indicators. |
+| onChange | (index: number, item) => void | undefined | Called whenever the focused card changes. |
+
+### Full Component Source
+```jsx
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import gsap from 'gsap';
+import './DepthCarousel.css';
+
+const DEFAULT_ITEMS = [
+  { image: 'https://picsum.photos/seed/depth1/800/1000', alt: 'Slide 1' },
+  { image: 'https://picsum.photos/seed/depth2/800/1000', alt: 'Slide 2' },
+  { image: 'https://picsum.photos/seed/depth3/800/1000', alt: 'Slide 3' },
+  { image: 'https://picsum.photos/seed/depth4/800/1000', alt: 'Slide 4' },
+  { image: 'https://picsum.photos/seed/depth5/800/1000', alt: 'Slide 5' },
+  { image: 'https://picsum.photos/seed/depth6/800/1000', alt: 'Slide 6' }
+];
+
+const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+const normalizeItem = it => (typeof it === 'string' ? { image: it, alt: '' } : it);
+
+const DepthCarousel = ({
+  items = DEFAULT_ITEMS,
+  cardWidth = 300,
+  cardHeight = 380,
+  radius = 18,
+  tint = '#05060a',
+  depth = 220,
+  spread = 90,
+  tilt = 22,
+  tiltDirection = 'right',
+  perspective = 1400,
+  visibleCards = 4,
+  falloff = 0.2,
+  blur = 6,
+  duration = 700,
+  ease = 'power3.out',
+  autoplay = false,
+  autoplayDelay = 3200,
+  loop = true,
+  showControls = true,
+  showIndicators = true,
+  onChange,
+  className = ''
+}) => {
+  const data = useMemo(() => (Array.isArray(items) ? items : []).map(normalizeItem), [items]);
+  const count = data.length;
+
+  const rootRef = useRef(null);
+  const stageRef = useRef(null);
+  const cardRefs = useRef([]);
+  const overlayRefs = useRef([]);
+
+  const posRef = useRef(0);
+  const focusRef = useRef(0);
+  const tweenRef = useRef(null);
+  const scaleRef = useRef(1);
+  const cfgRef = useRef({});
+  const onChangeRef = useRef(onChange);
+
+  const dragRef = useRef(null);
+  const wheelTimerRef = useRef(null);
+  const autoTimerRef = useRef(null);
+  const reducedRef = useRef(false);
+
+  const [active, setActive] = useState(0);
+
+  onChangeRef.current = onChange;
+  cfgRef.current = {
+    count,
+    depth,
+    spread,
+    tilt,
+    tiltDirection,
+    visibleCards,
+    falloff,
+    blur,
+    duration,
+    ease,
+    loop,
+    cardWidth,
+    autoplayDelay
+  };
+
+  const layout = useCallback(pos => {
+    const cfg = cfgRef.current;
+    const n = cfg.count;
+    if (!n) return;
+    const dir = cfg.tiltDirection === 'left' ? -1 : 1;
+    const sc = scaleRef.current;
+
+    for (let i = 0; i < n; i++) {
+      const el = cardRefs.current[i];
+      if (!el) continue;
+
+      let d = i - pos;
+      if (cfg.loop && n > 1) {
+        d = ((d % n) + n) % n;
+        if (d > n / 2) d -= n;
+      }
+
+      const back = Math.max(0, d);
+      const az = Math.abs(d);
+      const shown = az <= cfg.visibleCards + 0.5;
+
+      const tz = -cfg.depth * d;
+      const tx = dir * cfg.spread * d;
+      const ry = dir * cfg.tilt * clamp(d, 0, 1);
+
+      let opacity = d < 0 ? Math.max(0, 1 + d) : 1;
+      if (!shown) opacity = 0;
+
+      const brightness = Math.max(0.15, 1 - back * cfg.falloff);
+      const blurPx = cfg.blur > 0 ? Math.min(cfg.blur, (back / Math.max(1, cfg.visibleCards)) * cfg.blur) : 0;
+      const zi = Math.round(2000 - d * 20);
+
+      el.style.transform = `translate(-50%, -50%) scale(${sc}) translateX(${tx.toFixed(2)}px) translateZ(${tz.toFixed(2)}px) rotateY(${ry.toFixed(3)}deg)`;
+      el.style.opacity = opacity.toFixed(3);
+      el.style.filter = `brightness(${brightness.toFixed(3)}) blur(${blurPx.toFixed(2)}px)`;
+      el.style.zIndex = String(zi);
+      el.style.pointerEvents = shown && opacity > 0.05 ? 'auto' : 'none';
+
+      const ov = overlayRefs.current[i];
+      if (ov) ov.style.opacity = clamp(back * cfg.falloff * 1.25, 0, 0.86).toFixed(3);
+    }
+  }, []);
+
+  const notify = useCallback(
+    idx => {
+      setActive(idx);
+      onChangeRef.current?.(idx, data[idx]);
+    },
+    [data]
+  );
+
+  const tweenTo = useCallback(
+    (target, animate) => {
+      tweenRef.current?.kill();
+      const cfg = cfgRef.current;
+      const proxy = { p: posRef.current };
+      const dur = animate && !reducedRef.current ? cfg.duration / 1000 : 0;
+      tweenRef.current = gsap.to(proxy, {
+        p: target,
+        duration: dur,
+        ease: cfg.ease,
+        onUpdate: () => {
+          posRef.current = proxy.p;
+          layout(proxy.p);
+        },
+        onComplete: () => {
+          const n = cfg.count;
+          if (n > 0) posRef.current = ((posRef.current % n) + n) % n;
+          layout(posRef.current);
+        }
+      });
+    },
+    [layout]
+  );
+
+  const setFocus = useCallback(
+    (rawIndex, animate = true) => {
+      const cfg = cfgRef.current;
+      const n = cfg.count;
+      if (!n) return;
+      const idx = cfg.loop ? ((rawIndex % n) + n) % n : clamp(rawIndex, 0, n - 1);
+      let delta = idx - posRef.current;
+      if (cfg.loop && n > 1) {
+        delta = ((delta % n) + n) % n;
+        if (delta > n / 2) delta -= n;
+      }
+      tweenTo(posRef.current + delta, animate);
+      if (idx !== focusRef.current) {
+        focusRef.current = idx;
+        notify(idx);
+      }
+    },
+    [tweenTo, notify]
+  );
+
+  const navigateBy = useCallback(step => setFocus(focusRef.current + step, true), [setFocus]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const ro = new ResizeObserver(entries => {
+      const w = entries[0].contentRect.width;
+      const cfg = cfgRef.current;
+      const needed = cfg.cardWidth + Math.abs(cfg.spread) * 2 + 120;
+      scaleRef.current = clamp(w / needed, 0.4, 1);
+      layout(posRef.current);
+    });
+    ro.observe(root);
+    return () => ro.disconnect();
+  }, [layout]);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const onWheel = e => {
+      const cfg = cfgRef.current;
+      if (cfg.count < 2) return;
+      e.preventDefault();
+      tweenRef.current?.kill();
+      const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      const delta = e.deltaMode === 1 ? raw * 24 : raw;
+      const step = clamp(delta / (cfg.cardWidth * 0.9), -0.6, 0.6);
+      posRef.current += step;
+      layout(posRef.current);
+      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
+      wheelTimerRef.current = setTimeout(() => setFocus(Math.round(posRef.current), true), 130);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
+    };
+  }, [layout, setFocus]);
+
+  const onPointerDown = useCallback(e => {
+    const cfg = cfgRef.current;
+    if (cfg.count < 2) return;
+    tweenRef.current?.kill();
+    dragRef.current = {
+      x: e.clientX,
+      startPos: posRef.current,
+      lastX: e.clientX,
+      lastT: performance.now(),
+      v: 0,
+      moved: false,
+      id: e.pointerId
+    };
+  }, []);
+
+  const onPointerMove = useCallback(
+    e => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const cfg = cfgRef.current;
+      const stepPx = Math.max(cfg.cardWidth * 0.55 * scaleRef.current, 40);
+      const dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) > 4) {
+        drag.moved = true;
+        rootRef.current?.setPointerCapture(drag.id);
+      }
+      if (!drag.moved) return;
+      const now = performance.now();
+      const dt = Math.max(now - drag.lastT, 1);
+      drag.v = (e.clientX - drag.lastX) / dt;
+      drag.lastX = e.clientX;
+      drag.lastT = now;
+      posRef.current = drag.startPos - dx / stepPx;
+      layout(posRef.current);
+    },
+    [layout]
+  );
+
+  const onPointerEnd = useCallback(() => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    dragRef.current = null;
+    if (!drag.moved) return;
+    const cfg = cfgRef.current;
+    const stepPx = Math.max(cfg.cardWidth * 0.55 * scaleRef.current, 40);
+    const projected = posRef.current - (drag.v * 180) / stepPx;
+    setFocus(Math.round(projected), true);
+  }, [setFocus]);
+
+  const onKeyDown = useCallback(
+    e => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateBy(-1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateBy(1);
+      }
+    },
+    [navigateBy]
+  );
+
+  const onCardClick = useCallback(
+    index => {
+      if (dragRef.current?.moved) return;
+      setFocus(index, true);
+    },
+    [setFocus]
+  );
+
+  useEffect(() => {
+    reducedRef.current = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!autoplay || reducedRef.current || count < 2) return;
+    const root = rootRef.current;
+    let hovered = false;
+    let focused = false;
+    const stop = () => {
+      if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+      autoTimerRef.current = null;
+    };
+    const start = () => {
+      stop();
+      autoTimerRef.current = window.setInterval(
+        () => {
+          if (!hovered && !focused) navigateBy(1);
+        },
+        Math.max(cfgRef.current.autoplayDelay, 600)
+      );
+    };
+    const onEnter = () => {
+      hovered = true;
+    };
+    const onLeave = () => {
+      hovered = false;
+    };
+    const onFocusIn = () => {
+      focused = true;
+    };
+    const onFocusOut = () => {
+      focused = false;
+    };
+    root?.addEventListener('mouseenter', onEnter);
+    root?.addEventListener('mouseleave', onLeave);
+    root?.addEventListener('focusin', onFocusIn);
+    root?.addEventListener('focusout', onFocusOut);
+    start();
+    return () => {
+      stop();
+      root?.removeEventListener('mouseenter', onEnter);
+      root?.removeEventListener('mouseleave', onLeave);
+      root?.removeEventListener('focusin', onFocusIn);
+      root?.removeEventListener('focusout', onFocusOut);
+    };
+  }, [autoplay, autoplayDelay, count, navigateBy]);
+
+  useEffect(() => {
+    layout(posRef.current);
+  }, [layout, depth, spread, tilt, tiltDirection, visibleCards, falloff, blur, cardWidth, cardHeight, radius, count]);
+
+  useEffect(
+    () => () => {
+      tweenRef.current?.kill();
+      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
+      if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+    },
+    []
+  );
+
+  return (
+    <div
+      ref={rootRef}
+      className={`depth-carousel ${className}`.trim()}
+      style={{ '--dc-perspective': `${perspective}px` }}
+      role="group"
+      aria-roledescription="carousel"
+      aria-label="Depth carousel"
+      tabIndex={0}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerEnd}
+      onPointerCancel={onPointerEnd}
+      onKeyDown={onKeyDown}
+    >
+      <div className="depth-carousel__stage" ref={stageRef}>
+        {data.map((item, i) => (
+          <div
+            key={i}
+            className="depth-carousel__card"
+            ref={el => (cardRefs.current[i] = el)}
+            style={{ width: cardWidth, height: cardHeight, borderRadius: radius }}
+            aria-roledescription="slide"
+            aria-label={`${i + 1} of ${count}`}
+            aria-hidden={active !== i}
+            onClick={() => onCardClick(i)}
+          >
+            <img className="depth-carousel__img" src={item.image} alt={item.alt || ''} draggable={false} />
+            <span
+              className="depth-carousel__tint"
+              ref={el => (overlayRefs.current[i] = el)}
+              style={{ background: tint }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {showControls && count > 1 && (
+        <>
+          <button
+            type="button"
+            className="depth-carousel__arrow depth-carousel__arrow--prev"
+            aria-label="Previous slide"
+            onClick={() => navigateBy(-1)}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                d="M15 5l-7 7 7 7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="depth-carousel__arrow depth-carousel__arrow--next"
+            aria-label="Next slide"
+            onClick={() => navigateBy(1)}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                d="M9 5l7 7-7 7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </>
+      )}
+
+      {showIndicators && count > 1 && (
+        <div className="depth-carousel__dots" role="tablist" aria-label="Slides">
+          {data.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={active === i}
+              aria-label={`Go to slide ${i + 1}`}
+              className={`depth-carousel__dot${active === i ? ' is-active' : ''}`}
+              onClick={() => setFocus(i, true)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DepthCarousel;
+
+```
+
+### Component CSS
+```css
+.depth-carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: var(--dc-perspective, 1400px);
+  perspective-origin: 50% 50%;
+  touch-action: pan-y;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.depth-carousel:active {
+  cursor: grabbing;
+}
+
+.depth-carousel:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.depth-carousel__stage {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.depth-carousel__card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  overflow: hidden;
+  background: #0b0d12;
+  box-shadow:
+    0 30px 60px -20px rgba(0, 0, 0, 0.65),
+    0 8px 20px -10px rgba(0, 0, 0, 0.5);
+  will-change: transform, opacity, filter;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.depth-carousel__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.depth-carousel__tint {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.depth-carousel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3000;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(18, 20, 26, 0.55);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.depth-carousel__arrow:hover {
+  background: rgba(28, 31, 40, 0.85);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.depth-carousel__arrow:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.depth-carousel__arrow--prev {
+  left: 16px;
+}
+
+.depth-carousel__arrow--next {
+  right: 16px;
+}
+
+.depth-carousel__dots {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3000;
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(14, 16, 22, 0.4);
+  backdrop-filter: blur(6px);
+}
+
+.depth-carousel__dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
+  cursor: pointer;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease;
+}
+
+.depth-carousel__dot.is-active {
+  width: 20px;
+  background: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .depth-carousel__card {
+    will-change: auto;
+  }
+  .depth-carousel__arrow,
+  .depth-carousel__dot {
+    transition: none;
+  }
+}
+
+```
+
+### Integration Instructions
+1. Install any listed dependencies.
+2. Copy the component source into the appropriate directory in the project.
+3. Import the CSS file alongside the component.
+4. Import and render the component using the usage example above as a starting point.
+5. Adjust props as needed for the specific use case — refer to the props table for all available options.
+
+### More from React Bits
+The full library index, including everything reactbits.dev offers, is at https://reactbits.dev/llms.txt — fetch it if this component is not the right fit or the project needs more pieces.
+
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-08-13T11:55:36+05:30.
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from Gemini 3.6 Flash (Medium) to Gemini 3.1 Pro (Low). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>
