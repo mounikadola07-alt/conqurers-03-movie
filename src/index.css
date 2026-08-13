@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+.font-silkscreen {
+  font-family: 'Silkscreen', cursive;
+}
+
+.bg-cta-gradient {
+  background: linear-gradient(to bottom, #2B2B2B, #101010);
+}
