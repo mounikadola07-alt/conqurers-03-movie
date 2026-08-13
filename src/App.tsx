@@ -18,16 +18,23 @@ import {
   Calendar,
   Clock,
   User,
-  Trash2
+  Trash2,
+  TrendingUp,
+  Award,
+  Clapperboard,
+  CheckCircle
 } from 'lucide-react';
 import { FALLBACK_MOVIES, Movie } from './data/movies';
 
 export default function App() {
-  // Navigation & View State
+  // Active Tab: 'home' | 'discover' | 'watchlist'
   const [activeTab, setActiveTab] = useState<'home' | 'discover' | 'watchlist'>('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Watchlist State (LocalStorage)
+  // Hero Carousel Index
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  // Watchlist State with LocalStorage
   const [watchlist, setWatchlist] = useState<Movie[]>(() => {
     try {
       const saved = localStorage.getItem('cinevault_watchlist');
@@ -37,7 +44,7 @@ export default function App() {
     }
   });
 
-  // Theme State (LocalStorage)
+  // Theme State with LocalStorage
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('cinevault_theme');
     return saved !== null ? saved === 'dark' : true;
@@ -49,15 +56,16 @@ export default function App() {
   const [selectedRating, setSelectedRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState<'popularity' | 'rating' | 'year' | 'title'>('popularity');
 
-  // Modals
+  // Modal State
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [activeTrailerId, setActiveTrailerId] = useState<string | null>(null);
 
-  // Sync LocalStorage
+  // Sync Watchlist LocalStorage
   useEffect(() => {
     localStorage.setItem('cinevault_watchlist', JSON.stringify(watchlist));
   }, [watchlist]);
 
+  // Sync Theme LocalStorage & Body Class
   useEffect(() => {
     localStorage.setItem('cinevault_theme', isDarkMode ? 'dark' : 'light');
     if (isDarkMode) {
@@ -67,16 +75,24 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // Lock body scroll on modal / menu
+  // Hero Carousel Auto Play
   useEffect(() => {
-    if (isMobileMenuOpen || selectedMovie || activeTrailerId) {
+    const timer = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % 4);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Lock body scroll only when modal is open
+  useEffect(() => {
+    if (selectedMovie || activeTrailerId) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
-  }, [isMobileMenuOpen, selectedMovie, activeTrailerId]);
+  }, [selectedMovie, activeTrailerId]);
 
-  // Toggle Watchlist
+  // Watchlist helper functions
   const toggleWatchlist = (movie: Movie, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setWatchlist((prev) => {
@@ -93,12 +109,13 @@ export default function App() {
     return watchlist.some((m) => m.id === id);
   };
 
-  // Featured Hero Movie
-  const heroMovie = FALLBACK_MOVIES[0];
+  // Current Featured Hero Movie
+  const currentHeroMovie = FALLBACK_MOVIES[heroIndex] || FALLBACK_MOVIES[0];
 
-  // Filtering & Sorting for Discover Page
+  // Genres list
   const genres = ['All', 'Action', 'Adventure', 'Animation', 'Biography', 'Crime', 'Drama', 'Sci-Fi'];
 
+  // Filtered movies for Discover tab
   const filteredMovies = FALLBACK_MOVIES.filter((movie) => {
     const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           movie.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -115,30 +132,30 @@ export default function App() {
   return (
     <div className={`min-h-screen font-sans antialiased transition-colors duration-300 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       
-      {/* Header Navigation */}
-      <header className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${isDarkMode ? 'bg-slate-950/80 border-slate-800/80' : 'bg-white/80 border-slate-200'}`}>
+      {/* STICKY GLASSMORPHIC NAVBAR */}
+      <header className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${isDarkMode ? 'bg-slate-950/85 border-slate-800/80' : 'bg-white/85 border-slate-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
-          {/* Logo & Brand */}
+          {/* Brand Logo */}
           <div 
             onClick={() => setActiveTab('home')} 
-            className="flex items-center space-x-2.5 cursor-pointer group"
+            className="flex items-center space-x-3 cursor-pointer group"
           >
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 p-0.5 shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 p-0.5 shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
               <div className={`h-full w-full rounded-[10px] flex items-center justify-center ${isDarkMode ? 'bg-slate-950' : 'bg-white'}`}>
-                <Film className="h-4 w-4 text-purple-500" />
+                <Film className="h-5 w-5 text-purple-500" />
               </div>
             </div>
             <div>
               <span className="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
                 Conquerors 03
               </span>
-              <span className="text-[10px] block font-mono text-purple-400 -mt-1 font-semibold">CineVault</span>
+              <span className="text-[10px] block font-mono text-purple-400 -mt-1 font-bold">CineVault Platform</span>
             </div>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 bg-slate-900/40 p-1 rounded-full border border-slate-800/60 backdrop-blur-md">
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-1 bg-slate-900/40 p-1.5 rounded-full border border-slate-800/60 backdrop-blur-md">
             {[
               { id: 'home', label: 'Home' },
               { id: 'discover', label: 'Discover' },
@@ -147,9 +164,9 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all ${
                   activeTab === tab.id
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-105'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                 }`}
               >
@@ -158,7 +175,7 @@ export default function App() {
             ))}
           </nav>
 
-          {/* Search & Actions */}
+          {/* Actions & Search */}
           <div className="flex items-center space-x-3">
             {/* Quick Search */}
             <div className="relative hidden sm:block">
@@ -171,7 +188,7 @@ export default function App() {
                   setSearchQuery(e.target.value);
                   if (activeTab !== 'discover') setActiveTab('discover');
                 }}
-                className={`pl-8 pr-3 py-1.5 rounded-full text-xs outline-none transition-all w-40 focus:w-56 border ${
+                className={`pl-9 pr-3 py-1.5 rounded-full text-xs outline-none transition-all w-44 focus:w-60 border ${
                   isDarkMode 
                     ? 'bg-slate-900/80 border-slate-800 text-slate-100 placeholder-slate-400 focus:border-purple-500' 
                     : 'bg-slate-100 border-slate-300 text-slate-900 placeholder-slate-500 focus:border-purple-500'
@@ -179,7 +196,7 @@ export default function App() {
               />
             </div>
 
-            {/* Theme Toggle Button */}
+            {/* Dark / Light Mode Switcher */}
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className={`p-2 rounded-full border transition-all ${
@@ -192,20 +209,20 @@ export default function App() {
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
 
-            {/* Watchlist Counter Button */}
+            {/* Watchlist Counter Badge */}
             <button
               onClick={() => setActiveTab('watchlist')}
               className="relative p-2 rounded-full bg-purple-600/10 border border-purple-500/20 text-purple-400 hover:bg-purple-600/20 transition-all"
             >
               <Heart className="h-4 w-4 fill-purple-500/30" />
               {watchlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md">
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md animate-pulse">
                   {watchlist.length}
                 </span>
               )}
             </button>
 
-            {/* Mobile Hamburger Menu Button */}
+            {/* Mobile Hamburger Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 text-slate-400 hover:text-white"
@@ -216,7 +233,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Mobile Menu Drawer */}
+      {/* MOBILE MENU DRAWER */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -267,88 +284,116 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* MAIN BODY CONTENT */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      {/* MAIN CONTENT AREA */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16">
         
-        {/* TAB 1: HOME PAGE */}
+        {/* ==================== TAB 1: HOME PAGE ==================== */}
         {activeTab === 'home' && (
-          <div className="space-y-12">
+          <div className="space-y-16">
             
-            {/* HERO SECTION */}
-            <section className="relative rounded-3xl overflow-hidden border border-purple-500/20 shadow-2xl bg-slate-900 group">
+            {/* HERO CAROUSEL SECTION */}
+            <section className="relative rounded-3xl overflow-hidden border border-purple-500/20 shadow-2xl bg-slate-950 group">
               <div 
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url(${heroMovie.backdrop})` }}
+                className="absolute inset-0 bg-cover bg-center transition-all duration-1000 group-hover:scale-105"
+                style={{ backgroundImage: `url(${currentHeroMovie.backdrop})` }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
-              
-              <div className="relative z-10 p-6 sm:p-12 max-w-2xl space-y-5">
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent sm:w-2/3" />
+
+              <div className="relative z-10 p-6 sm:p-12 lg:p-16 max-w-2xl space-y-6">
                 <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-semibold backdrop-blur-md">
-                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                  <span>Featured Movie of the Week</span>
+                  <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
+                  <span>Featured Release</span>
                 </div>
 
-                <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-none drop-shadow-md">
-                  {heroMovie.title}
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none drop-shadow-md">
+                  {currentHeroMovie.title}
                 </h1>
 
-                <div className="flex items-center space-x-4 text-xs font-semibold text-slate-300">
-                  <span className="flex items-center text-amber-400">
+                {currentHeroMovie.tagline && (
+                  <p className="text-purple-300 font-mono text-xs sm:text-sm italic">
+                    "{currentHeroMovie.tagline}"
+                  </p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300">
+                  <span className="flex items-center text-amber-400 font-bold bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
                     <Star className="h-4 w-4 fill-amber-400 mr-1" />
-                    {heroMovie.rating}
+                    {currentHeroMovie.rating}
                   </span>
-                  <span>{heroMovie.year}</span>
-                  <span className="px-2 py-0.5 rounded bg-slate-800/80 border border-slate-700 text-purple-300 font-mono">
-                    {heroMovie.genre}
+                  <span>{currentHeroMovie.year}</span>
+                  <span className="px-2.5 py-1 rounded bg-slate-900/80 border border-slate-700 text-purple-300 font-mono">
+                    {currentHeroMovie.genre}
                   </span>
-                  <span>{heroMovie.runtime}</span>
+                  <span>{currentHeroMovie.runtime}</span>
                 </div>
 
                 <p className="text-slate-300 text-sm sm:text-base leading-relaxed line-clamp-3">
-                  {heroMovie.description}
+                  {currentHeroMovie.description}
                 </p>
 
-                <div className="flex flex-wrap items-center gap-3 pt-2">
+                <div className="flex flex-wrap items-center gap-4 pt-2">
                   <button
-                    onClick={() => setActiveTrailerId(heroMovie.trailerId)}
-                    className="px-6 py-3 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs sm:text-sm flex items-center space-x-2 shadow-lg shadow-purple-600/30 transition-all hover:scale-105"
+                    onClick={() => setActiveTrailerId(currentHeroMovie.trailerId)}
+                    className="px-6 py-3.5 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs sm:text-sm flex items-center space-x-2 shadow-lg shadow-purple-600/40 transition-all hover:scale-105"
                   >
                     <Play className="h-4 w-4 fill-white" />
                     <span>Watch Trailer</span>
                   </button>
 
                   <button
-                    onClick={(e) => toggleWatchlist(heroMovie, e)}
-                    className={`px-5 py-3 rounded-full border font-semibold text-xs sm:text-sm flex items-center space-x-2 transition-all backdrop-blur-md ${
-                      isMovieInWatchlist(heroMovie.id)
+                    onClick={(e) => toggleWatchlist(currentHeroMovie, e)}
+                    className={`px-6 py-3.5 rounded-full border font-semibold text-xs sm:text-sm flex items-center space-x-2 transition-all backdrop-blur-md ${
+                      isMovieInWatchlist(currentHeroMovie.id)
                         ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
                         : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
                     }`}
                   >
-                    <Heart className={`h-4 w-4 ${isMovieInWatchlist(heroMovie.id) ? 'fill-emerald-400' : ''}`} />
-                    <span>{isMovieInWatchlist(heroMovie.id) ? 'In Watchlist' : 'Add to Watchlist'}</span>
+                    <Heart className={`h-4 w-4 ${isMovieInWatchlist(currentHeroMovie.id) ? 'fill-emerald-400' : ''}`} />
+                    <span>{isMovieInWatchlist(currentHeroMovie.id) ? 'In Watchlist' : 'Add to Watchlist'}</span>
                   </button>
+                </div>
+
+                {/* Hero Slide Indicators */}
+                <div className="flex items-center space-x-2 pt-4">
+                  {[0, 1, 2, 3].map((idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setHeroIndex(idx)}
+                      className={`h-1.5 rounded-full transition-all ${
+                        heroIndex === idx ? 'w-8 bg-purple-500' : 'w-2 bg-slate-700 hover:bg-slate-500'
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
             </section>
 
             {/* REACT BITS 3D CAROUSEL SECTION */}
-            <section className="space-y-4">
+            <section className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold tracking-tight text-white flex items-center space-x-2">
-                  <Sparkles className="h-5 w-5 text-purple-400 animate-pulse" />
-                  <span>React Bits 3D Movie Carousel</span>
-                </h2>
-                <span className="text-xs text-purple-400 font-mono">Interactive Motion</span>
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 bg-purple-500/10 border border-purple-500/20 rounded-xl text-purple-400">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-extrabold text-white">React Bits 3D Motion Carousel</h2>
+                    <p className="text-xs text-slate-400">Interactive 3D component showcase</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono text-purple-400 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20">
+                  Featured 3D Showcase
+                </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 {FALLBACK_MOVIES.slice(0, 4).map((movie, idx) => (
                   <motion.div
                     key={movie.id}
-                    whileHover={{ scale: 1.05, y: -5 }}
+                    whileHover={{ scale: 1.05, rotateY: 5, y: -6 }}
+                    transition={{ duration: 0.3 }}
                     onClick={() => setSelectedMovie(movie)}
-                    className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 cursor-pointer shadow-lg group aspect-[2/3]"
+                    className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 cursor-pointer shadow-xl group aspect-[2/3]"
                   >
                     <img 
                       src={movie.poster} 
@@ -357,7 +402,7 @@ export default function App() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
                     
-                    <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-2 py-1 rounded-lg border border-slate-700/80 text-[11px] font-bold text-amber-400 flex items-center">
+                    <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-slate-700/80 text-[11px] font-bold text-amber-400 flex items-center">
                       <Star className="h-3 w-3 fill-amber-400 mr-1" />
                       {movie.rating}
                     </div>
@@ -371,18 +416,21 @@ export default function App() {
               </div>
             </section>
 
-            {/* TRENDING NOW & TOP RATED ROWS */}
+            {/* CATEGORY ROW: TRENDING NOW */}
             <section className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold tracking-tight text-white">Trending Now</h2>
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h2 className="text-xl font-bold text-white flex items-center space-x-2">
+                  <TrendingUp className="h-5 w-5 text-purple-400" />
+                  <span>Trending Now</span>
+                </h2>
                 <button onClick={() => setActiveTab('discover')} className="text-xs text-purple-400 hover:text-purple-300 font-medium flex items-center">
-                  <span>View All</span>
+                  <span>Explore All</span>
                   <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
                 </button>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
-                {FALLBACK_MOVIES.map((movie) => (
+                {FALLBACK_MOVIES.slice(0, 8).map((movie) => (
                   <motion.div
                     key={movie.id}
                     whileHover={{ y: -6 }}
@@ -425,34 +473,81 @@ export default function App() {
                 ))}
               </div>
             </section>
+
+            {/* CATEGORY ROW: TOP RATED */}
+            <section className="space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h2 className="text-xl font-bold text-white flex items-center space-x-2">
+                  <Award className="h-5 w-5 text-amber-400" />
+                  <span>Top Rated Blockbusters</span>
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
+                {FALLBACK_MOVIES.filter(m => m.rating >= 8.5).map((movie) => (
+                  <motion.div
+                    key={movie.id}
+                    whileHover={{ y: -6 }}
+                    onClick={() => setSelectedMovie(movie)}
+                    className="bg-slate-900/60 border border-slate-800/80 hover:border-purple-500/40 rounded-2xl overflow-hidden cursor-pointer group flex flex-col justify-between transition-all shadow-md"
+                  >
+                    <div className="relative aspect-[2/3] overflow-hidden">
+                      <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <button
+                        onClick={(e) => toggleWatchlist(movie, e)}
+                        className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md border transition-all ${
+                          isMovieInWatchlist(movie.id)
+                            ? 'bg-purple-600 border-purple-500 text-white'
+                            : 'bg-slate-950/60 border-slate-700/80 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        <Heart className={`h-3.5 w-3.5 ${isMovieInWatchlist(movie.id) ? 'fill-white' : ''}`} />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-amber-400 flex items-center">
+                        <Star className="h-3 w-3 fill-amber-400 mr-1" />
+                        {movie.rating}
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-1">
+                      <h3 className="font-bold text-sm text-white group-hover:text-purple-300 transition-colors truncate">{movie.title}</h3>
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                        <span>{movie.genre}</span>
+                        <span>{movie.year}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+
           </div>
         )}
 
-        {/* TAB 2: DISCOVER PAGE */}
+        {/* ==================== TAB 2: DISCOVER PAGE ==================== */}
         {activeTab === 'discover' && (
-          <div className="space-y-8">
+          <div className="space-y-10">
             <div className="space-y-2">
               <h1 className="text-3xl font-black text-white">Discover Movies</h1>
               <p className="text-xs text-slate-400">Search and filter movies by genre, minimum rating, and sorting options</p>
             </div>
 
-            {/* FILTERS & SEARCH TOOLBAR */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-6">
+            {/* FILTERS TOOLBAR */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
               
-              {/* Search Bar */}
+              {/* Search Input */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search by movie title or keywords..."
+                  placeholder="Search by title, overview, or cast..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl text-sm bg-slate-950 border border-slate-800 text-white outline-none focus:border-purple-500 transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl text-sm bg-slate-950 border border-slate-800 text-white outline-none focus:border-purple-500 transition-all"
                 />
               </div>
 
               {/* Genre Pills */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label className="text-xs font-semibold text-slate-400 flex items-center space-x-1.5">
                   <Filter className="h-3.5 w-3.5 text-purple-400" />
                   <span>Genre Filter</span>
@@ -462,9 +557,9 @@ export default function App() {
                     <button
                       key={genre}
                       onClick={() => setSelectedGenre(genre)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                      className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
                         selectedGenre === genre
-                          ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                          ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-105'
                           : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
                       }`}
                     >
@@ -474,14 +569,14 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Rating Threshold & Sort Selector */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
-                <div className="space-y-1.5">
+              {/* Rating & Sort Controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+                <div className="space-y-2">
                   <label className="text-xs font-semibold text-slate-400">Minimum Rating ({selectedRating}+ ⭐)</label>
                   <select
                     value={selectedRating}
                     onChange={(e) => setSelectedRating(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-purple-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-purple-500"
                   >
                     <option value={0}>All Ratings</option>
                     <option value={8.5}>8.5+ Exceptional</option>
@@ -490,12 +585,12 @@ export default function App() {
                   </select>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <label className="text-xs font-semibold text-slate-400">Sort By</label>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-purple-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-purple-500"
                   >
                     <option value="popularity">Popularity</option>
                     <option value="rating">Rating (High to Low)</option>
@@ -506,17 +601,17 @@ export default function App() {
               </div>
             </div>
 
-            {/* RESULTS GRID */}
+            {/* RESULTS */}
             <div className="space-y-4">
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <span>Showing <strong className="text-white">{filteredMovies.length}</strong> movies</span>
               </div>
 
               {filteredMovies.length === 0 ? (
-                <div className="text-center py-16 bg-slate-900/40 rounded-2xl border border-slate-800 space-y-3">
-                  <Film className="h-10 w-10 text-slate-600 mx-auto" />
+                <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-slate-800 space-y-3">
+                  <Clapperboard className="h-12 w-12 text-slate-600 mx-auto" />
                   <h3 className="text-base font-semibold text-white">No movies found</h3>
-                  <p className="text-xs text-slate-400">Try adjusting your search terms or genre filter.</p>
+                  <p className="text-xs text-slate-400">Try adjusting your search query or genre filter.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
@@ -555,12 +650,12 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 3: WATCHLIST PAGE */}
+        {/* ==================== TAB 3: WATCHLIST PAGE ==================== */}
         {activeTab === 'watchlist' && (
-          <div className="space-y-8">
+          <div className="space-y-10">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div>
-                <h1 className="text-3xl font-black text-white">Your Personal Watchlist</h1>
+                <h1 className="text-3xl font-black text-white">Your Watchlist</h1>
                 <p className="text-xs text-slate-400">Movies saved to LocalStorage for later viewing</p>
               </div>
               {watchlist.length > 0 && (
@@ -575,17 +670,17 @@ export default function App() {
             </div>
 
             {watchlist.length === 0 ? (
-              <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-slate-800 space-y-4 max-w-md mx-auto">
+              <div className="text-center py-24 bg-slate-900/40 rounded-3xl border border-slate-800 space-y-4 max-w-md mx-auto">
                 <div className="h-16 w-16 rounded-full bg-purple-600/10 border border-purple-500/20 flex items-center justify-center mx-auto text-purple-400">
                   <Heart className="h-8 w-8 text-purple-400" />
                 </div>
                 <h3 className="text-lg font-bold text-white">No movies in your watchlist yet</h3>
                 <p className="text-xs text-slate-400 leading-relaxed px-6">
-                  Explore trending movies or use the Discover filters to add films you plan to watch!
+                  Explore trending movies or use Discover filters to add movies to your personal watchlist!
                 </p>
                 <button
                   onClick={() => setActiveTab('discover')}
-                  className="px-6 py-2.5 rounded-full bg-purple-600 text-white text-xs font-semibold shadow-lg shadow-purple-600/30 hover:scale-105 transition-all"
+                  className="px-6 py-3 rounded-full bg-purple-600 text-white text-xs font-semibold shadow-lg shadow-purple-600/30 hover:scale-105 transition-all"
                 >
                   Discover Movies
                 </button>
@@ -661,7 +756,7 @@ export default function App() {
                       setActiveTrailerId(selectedMovie.trailerId);
                       setSelectedMovie(null);
                     }}
-                    className="px-4 py-2.5 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs flex items-center space-x-2 shadow-lg shadow-purple-600/30"
+                    className="px-5 py-2.5 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs flex items-center space-x-2 shadow-lg shadow-purple-600/30"
                   >
                     <Play className="h-4 w-4 fill-white" />
                     <span>Trailer</span>
@@ -741,7 +836,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/80 py-8 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-800/80 bg-slate-950 py-10 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
             <Film className="h-4 w-4 text-purple-500" />
