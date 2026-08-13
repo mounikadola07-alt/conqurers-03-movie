@@ -13,28 +13,22 @@ import {
   X, 
   Filter, 
   ChevronRight, 
-  SlidersHorizontal,
-  Info,
-  Calendar,
-  Clock,
-  User,
-  Trash2,
-  TrendingUp,
-  Award,
-  Clapperboard,
-  CheckCircle
+  Calendar, 
+  Clock, 
+  User, 
+  Trash2, 
+  TrendingUp, 
+  Award, 
+  Clapperboard 
 } from 'lucide-react';
 import { FALLBACK_MOVIES, Movie } from './data/movies';
 
 export default function App() {
-  // Active Tab: 'home' | 'discover' | 'watchlist'
   const [activeTab, setActiveTab] = useState<'home' | 'discover' | 'watchlist'>('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // Hero Carousel Index
   const [heroIndex, setHeroIndex] = useState(0);
 
-  // Watchlist State with LocalStorage
+  // Watchlist State (LocalStorage)
   const [watchlist, setWatchlist] = useState<Movie[]>(() => {
     try {
       const saved = localStorage.getItem('cinevault_watchlist');
@@ -44,7 +38,7 @@ export default function App() {
     }
   });
 
-  // Theme State with LocalStorage
+  // Theme State (LocalStorage)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('cinevault_theme');
     return saved !== null ? saved === 'dark' : true;
@@ -56,16 +50,14 @@ export default function App() {
   const [selectedRating, setSelectedRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState<'popularity' | 'rating' | 'year' | 'title'>('popularity');
 
-  // Modal State
+  // Modals
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [activeTrailerId, setActiveTrailerId] = useState<string | null>(null);
 
-  // Sync Watchlist LocalStorage
   useEffect(() => {
     localStorage.setItem('cinevault_watchlist', JSON.stringify(watchlist));
   }, [watchlist]);
 
-  // Sync Theme LocalStorage & Body Class
   useEffect(() => {
     localStorage.setItem('cinevault_theme', isDarkMode ? 'dark' : 'light');
     if (isDarkMode) {
@@ -75,15 +67,13 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // Hero Carousel Auto Play
   useEffect(() => {
     const timer = setInterval(() => {
       setHeroIndex((prev) => (prev + 1) % 4);
-    }, 6000);
+    }, 7000);
     return () => clearInterval(timer);
   }, []);
 
-  // Lock body scroll only when modal is open
   useEffect(() => {
     if (selectedMovie || activeTrailerId) {
       document.body.style.overflow = 'hidden';
@@ -92,7 +82,6 @@ export default function App() {
     }
   }, [selectedMovie, activeTrailerId]);
 
-  // Watchlist helper functions
   const toggleWatchlist = (movie: Movie, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setWatchlist((prev) => {
@@ -109,13 +98,9 @@ export default function App() {
     return watchlist.some((m) => m.id === id);
   };
 
-  // Current Featured Hero Movie
   const currentHeroMovie = FALLBACK_MOVIES[heroIndex] || FALLBACK_MOVIES[0];
-
-  // Genres list
   const genres = ['All', 'Action', 'Adventure', 'Animation', 'Biography', 'Crime', 'Drama', 'Sci-Fi'];
 
-  // Filtered movies for Discover tab
   const filteredMovies = FALLBACK_MOVIES.filter((movie) => {
     const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           movie.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -130,32 +115,32 @@ export default function App() {
   });
 
   return (
-    <div className={`min-h-screen font-sans antialiased transition-colors duration-300 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`min-h-screen font-sans antialiased transition-colors duration-300 ${isDarkMode ? 'bg-[#0b0f19] text-slate-100' : 'bg-[#faf8ff] text-slate-800'}`}>
       
-      {/* STICKY GLASSMORPHIC NAVBAR */}
-      <header className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${isDarkMode ? 'bg-slate-950/85 border-slate-800/80' : 'bg-white/85 border-slate-200'}`}>
+      {/* FROSTED ACRYLIC NAVBAR */}
+      <header className={`sticky top-0 z-40 border-b backdrop-blur-2xl transition-colors duration-300 ${isDarkMode ? 'bg-[#0b0f19]/80 border-white/5' : 'bg-white/80 border-slate-200/80'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
-          {/* Brand Logo */}
+          {/* Logo & Brand */}
           <div 
             onClick={() => setActiveTab('home')} 
             className="flex items-center space-x-3 cursor-pointer group"
           >
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 p-0.5 shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
-              <div className={`h-full w-full rounded-[10px] flex items-center justify-center ${isDarkMode ? 'bg-slate-950' : 'bg-white'}`}>
-                <Film className="h-5 w-5 text-purple-500" />
+            <div className="h-10 w-10 rounded-2xl pastel-btn-gradient p-0.5 shadow-md shadow-indigo-500/10 group-hover:scale-105 transition-transform">
+              <div className={`h-full w-full rounded-[14px] flex items-center justify-center ${isDarkMode ? 'bg-[#0b0f19]' : 'bg-white'}`}>
+                <Film className="h-4 w-4 text-purple-300" />
               </div>
             </div>
             <div>
-              <span className="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+              <span className="font-extrabold text-lg tracking-tight pastel-text-gradient">
                 Conquerors 03
               </span>
-              <span className="text-[10px] block font-mono text-purple-400 -mt-1 font-bold">CineVault Platform</span>
+              <span className="text-[10px] block font-mono text-purple-300/80 -mt-1 font-semibold">CineVault Platform</span>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 bg-slate-900/40 p-1.5 rounded-full border border-slate-800/60 backdrop-blur-md">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-1 bg-white/5 p-1 rounded-full border border-white/10 backdrop-blur-xl">
             {[
               { id: 'home', label: 'Home' },
               { id: 'discover', label: 'Discover' },
@@ -164,10 +149,10 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                className={`px-5 py-1.5 rounded-full text-xs font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-105'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                    ? 'pastel-btn-gradient text-white shadow-md shadow-purple-500/20'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {tab.label}
@@ -175,11 +160,11 @@ export default function App() {
             ))}
           </nav>
 
-          {/* Actions & Search */}
+          {/* Search & Actions */}
           <div className="flex items-center space-x-3">
             {/* Quick Search */}
             <div className="relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search movies..."
@@ -188,35 +173,35 @@ export default function App() {
                   setSearchQuery(e.target.value);
                   if (activeTab !== 'discover') setActiveTab('discover');
                 }}
-                className={`pl-9 pr-3 py-1.5 rounded-full text-xs outline-none transition-all w-44 focus:w-60 border ${
+                className={`pl-9 pr-3.5 py-1.5 rounded-full text-xs outline-none transition-all w-44 focus:w-60 border ${
                   isDarkMode 
-                    ? 'bg-slate-900/80 border-slate-800 text-slate-100 placeholder-slate-400 focus:border-purple-500' 
-                    : 'bg-slate-100 border-slate-300 text-slate-900 placeholder-slate-500 focus:border-purple-500'
+                    ? 'bg-slate-900/60 border-white/10 text-slate-200 placeholder-slate-400 focus:border-purple-300/50' 
+                    : 'bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-purple-400'
                 }`}
               />
             </div>
 
-            {/* Dark / Light Mode Switcher */}
+            {/* Theme Toggle Button */}
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className={`p-2 rounded-full border transition-all ${
                 isDarkMode 
-                  ? 'bg-slate-900 border-slate-800 text-amber-400 hover:bg-slate-800' 
-                  : 'bg-slate-100 border-slate-300 text-purple-600 hover:bg-slate-200'
+                  ? 'bg-slate-900/60 border-white/10 text-purple-300 hover:bg-slate-800/80' 
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
               }`}
               title="Toggle Theme"
             >
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
 
-            {/* Watchlist Counter Badge */}
+            {/* Watchlist Counter Button */}
             <button
               onClick={() => setActiveTab('watchlist')}
-              className="relative p-2 rounded-full bg-purple-600/10 border border-purple-500/20 text-purple-400 hover:bg-purple-600/20 transition-all"
+              className="relative p-2 rounded-full bg-purple-500/10 border border-purple-400/20 text-purple-300 hover:bg-purple-500/20 transition-all"
             >
-              <Heart className="h-4 w-4 fill-purple-500/30" />
+              <Heart className="h-4 w-4 fill-purple-400/20 text-purple-300" />
               {watchlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md animate-pulse">
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-400 text-slate-950 text-[10px] font-extrabold flex items-center justify-center shadow-sm">
                   {watchlist.length}
                 </span>
               )}
@@ -240,7 +225,7 @@ export default function App() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className={`md:hidden border-b backdrop-blur-xl ${isDarkMode ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200'}`}
+            className={`md:hidden border-b backdrop-blur-xl ${isDarkMode ? 'bg-[#0b0f19]/95 border-white/10' : 'bg-white/95 border-slate-200'}`}
           >
             <div className="px-4 py-4 space-y-3">
               <div className="relative">
@@ -253,7 +238,7 @@ export default function App() {
                     setSearchQuery(e.target.value);
                     if (activeTab !== 'discover') setActiveTab('discover');
                   }}
-                  className="w-full pl-9 pr-4 py-2 rounded-xl text-sm bg-slate-900 border border-slate-800 text-white outline-none"
+                  className="w-full pl-9 pr-4 py-2 rounded-xl text-sm bg-slate-900 border border-white/10 text-white outline-none"
                 />
               </div>
 
@@ -271,8 +256,8 @@ export default function App() {
                     }}
                     className={`py-2 rounded-xl text-xs font-semibold ${
                       activeTab === tab.id
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-900 border border-slate-800 text-slate-400'
+                        ? 'pastel-btn-gradient text-white'
+                        : 'bg-white/5 border border-white/10 text-slate-400'
                     }`}
                   >
                     {tab.label}
@@ -284,7 +269,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* MAIN CONTENT AREA */}
+      {/* MAIN CONTAINER */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16">
         
         {/* ==================== TAB 1: HOME PAGE ==================== */}
@@ -292,37 +277,37 @@ export default function App() {
           <div className="space-y-16">
             
             {/* HERO CAROUSEL SECTION */}
-            <section className="relative rounded-3xl overflow-hidden border border-purple-500/20 shadow-2xl bg-slate-950 group">
+            <section className="relative rounded-3xl overflow-hidden border border-white/10 shadow-xl bg-slate-900 group">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-all duration-1000 group-hover:scale-105"
                 style={{ backgroundImage: `url(${currentHeroMovie.backdrop})` }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent sm:w-2/3" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/70 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0b0f19]/90 via-[#0b0f19]/40 to-transparent sm:w-2/3" />
 
               <div className="relative z-10 p-6 sm:p-12 lg:p-16 max-w-2xl space-y-6">
-                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-semibold backdrop-blur-md">
-                  <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
+                <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-purple-300/10 border border-purple-300/20 text-purple-200 text-xs font-semibold backdrop-blur-md">
+                  <Sparkles className="h-3.5 w-3.5 text-purple-300" />
                   <span>Featured Release</span>
                 </div>
 
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none drop-shadow-md">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none drop-shadow-sm">
                   {currentHeroMovie.title}
                 </h1>
 
                 {currentHeroMovie.tagline && (
-                  <p className="text-purple-300 font-mono text-xs sm:text-sm italic">
+                  <p className="text-purple-200/90 font-mono text-xs sm:text-sm italic">
                     "{currentHeroMovie.tagline}"
                   </p>
                 )}
 
-                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300">
-                  <span className="flex items-center text-amber-400 font-bold bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
-                    <Star className="h-4 w-4 fill-amber-400 mr-1" />
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-300">
+                  <span className="flex items-center text-amber-300 font-bold bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
+                    <Star className="h-3.5 w-3.5 fill-amber-300 mr-1" />
                     {currentHeroMovie.rating}
                   </span>
                   <span>{currentHeroMovie.year}</span>
-                  <span className="px-2.5 py-1 rounded bg-slate-900/80 border border-slate-700 text-purple-300 font-mono">
+                  <span className="px-2.5 py-1 rounded bg-white/10 border border-white/10 text-purple-200 font-mono">
                     {currentHeroMovie.genre}
                   </span>
                   <span>{currentHeroMovie.runtime}</span>
@@ -335,7 +320,7 @@ export default function App() {
                 <div className="flex flex-wrap items-center gap-4 pt-2">
                   <button
                     onClick={() => setActiveTrailerId(currentHeroMovie.trailerId)}
-                    className="px-6 py-3.5 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs sm:text-sm flex items-center space-x-2 shadow-lg shadow-purple-600/40 transition-all hover:scale-105"
+                    className="px-6 py-3.5 rounded-full pastel-btn-gradient text-white font-semibold text-xs sm:text-sm flex items-center space-x-2 shadow-lg shadow-purple-500/20 transition-all hover:scale-105"
                   >
                     <Play className="h-4 w-4 fill-white" />
                     <span>Watch Trailer</span>
@@ -345,11 +330,11 @@ export default function App() {
                     onClick={(e) => toggleWatchlist(currentHeroMovie, e)}
                     className={`px-6 py-3.5 rounded-full border font-semibold text-xs sm:text-sm flex items-center space-x-2 transition-all backdrop-blur-md ${
                       isMovieInWatchlist(currentHeroMovie.id)
-                        ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                        ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300'
                         : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
                     }`}
                   >
-                    <Heart className={`h-4 w-4 ${isMovieInWatchlist(currentHeroMovie.id) ? 'fill-emerald-400' : ''}`} />
+                    <Heart className={`h-4 w-4 ${isMovieInWatchlist(currentHeroMovie.id) ? 'fill-emerald-300' : ''}`} />
                     <span>{isMovieInWatchlist(currentHeroMovie.id) ? 'In Watchlist' : 'Add to Watchlist'}</span>
                   </button>
                 </div>
@@ -361,7 +346,7 @@ export default function App() {
                       key={idx}
                       onClick={() => setHeroIndex(idx)}
                       className={`h-1.5 rounded-full transition-all ${
-                        heroIndex === idx ? 'w-8 bg-purple-500' : 'w-2 bg-slate-700 hover:bg-slate-500'
+                        heroIndex === idx ? 'w-8 bg-purple-300' : 'w-2 bg-white/20 hover:bg-white/40'
                       }`}
                     />
                   ))}
@@ -372,8 +357,8 @@ export default function App() {
             {/* REACT BITS 3D CAROUSEL SECTION */}
             <section className="space-y-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-purple-500/10 border border-purple-500/20 rounded-xl text-purple-400">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2.5 bg-purple-300/10 border border-purple-300/20 rounded-2xl text-purple-300">
                     <Sparkles className="h-5 w-5" />
                   </div>
                   <div>
@@ -381,35 +366,35 @@ export default function App() {
                     <p className="text-xs text-slate-400">Interactive 3D component showcase</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono text-purple-400 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20">
-                  Featured 3D Showcase
+                <span className="text-xs font-mono text-purple-200 px-3 py-1 rounded-full bg-purple-300/10 border border-purple-300/20">
+                  Pastel Acrylic UI
                 </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                {FALLBACK_MOVIES.slice(0, 4).map((movie, idx) => (
+                {FALLBACK_MOVIES.slice(0, 4).map((movie) => (
                   <motion.div
                     key={movie.id}
-                    whileHover={{ scale: 1.05, rotateY: 5, y: -6 }}
+                    whileHover={{ scale: 1.05, rotateY: 4, y: -6 }}
                     transition={{ duration: 0.3 }}
                     onClick={() => setSelectedMovie(movie)}
-                    className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 cursor-pointer shadow-xl group aspect-[2/3]"
+                    className="relative rounded-2xl overflow-hidden acrylic-card cursor-pointer group aspect-[2/3]"
                   >
                     <img 
                       src={movie.poster} 
                       alt={movie.title} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/30 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
                     
-                    <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-slate-700/80 text-[11px] font-bold text-amber-400 flex items-center">
-                      <Star className="h-3 w-3 fill-amber-400 mr-1" />
+                    <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[11px] font-bold text-amber-300 flex items-center">
+                      <Star className="h-3 w-3 fill-amber-300 mr-1" />
                       {movie.rating}
                     </div>
 
                     <div className="absolute bottom-3 left-3 right-3 space-y-1">
                       <h3 className="font-bold text-sm text-white truncate">{movie.title}</h3>
-                      <p className="text-[11px] text-purple-300 font-mono">{movie.genre} • {movie.year}</p>
+                      <p className="text-[11px] text-purple-200 font-mono">{movie.genre} • {movie.year}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -418,12 +403,12 @@ export default function App() {
 
             {/* CATEGORY ROW: TRENDING NOW */}
             <section className="space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <h2 className="text-xl font-bold text-white flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-purple-400" />
+                  <TrendingUp className="h-5 w-5 text-purple-300" />
                   <span>Trending Now</span>
                 </h2>
-                <button onClick={() => setActiveTab('discover')} className="text-xs text-purple-400 hover:text-purple-300 font-medium flex items-center">
+                <button onClick={() => setActiveTab('discover')} className="text-xs text-purple-300 hover:text-purple-200 font-medium flex items-center">
                   <span>Explore All</span>
                   <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
                 </button>
@@ -435,7 +420,7 @@ export default function App() {
                     key={movie.id}
                     whileHover={{ y: -6 }}
                     onClick={() => setSelectedMovie(movie)}
-                    className="bg-slate-900/60 border border-slate-800/80 hover:border-purple-500/40 rounded-2xl overflow-hidden cursor-pointer group flex flex-col justify-between transition-all shadow-md hover:shadow-xl hover:shadow-purple-950/20"
+                    className="acrylic-card hover:border-purple-300/30 rounded-2xl overflow-hidden cursor-pointer group flex flex-col justify-between transition-all"
                   >
                     <div className="relative aspect-[2/3] overflow-hidden">
                       <img 
@@ -447,21 +432,21 @@ export default function App() {
                         onClick={(e) => toggleWatchlist(movie, e)}
                         className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md border transition-all ${
                           isMovieInWatchlist(movie.id)
-                            ? 'bg-purple-600 border-purple-500 text-white'
-                            : 'bg-slate-950/60 border-slate-700/80 text-slate-300 hover:text-white'
+                            ? 'pastel-btn-gradient text-white border-transparent'
+                            : 'bg-slate-900/60 border-white/10 text-slate-300 hover:text-white'
                         }`}
                       >
                         <Heart className={`h-3.5 w-3.5 ${isMovieInWatchlist(movie.id) ? 'fill-white' : ''}`} />
                       </button>
 
-                      <div className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-amber-400 flex items-center">
-                        <Star className="h-3 w-3 fill-amber-400 mr-1" />
+                      <div className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-amber-300 flex items-center">
+                        <Star className="h-3 w-3 fill-amber-300 mr-1" />
                         {movie.rating}
                       </div>
                     </div>
 
                     <div className="p-4 space-y-1">
-                      <h3 className="font-bold text-sm text-white group-hover:text-purple-300 transition-colors truncate">
+                      <h3 className="font-bold text-sm text-white group-hover:text-purple-200 transition-colors truncate">
                         {movie.title}
                       </h3>
                       <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
@@ -476,9 +461,9 @@ export default function App() {
 
             {/* CATEGORY ROW: TOP RATED */}
             <section className="space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <h2 className="text-xl font-bold text-white flex items-center space-x-2">
-                  <Award className="h-5 w-5 text-amber-400" />
+                  <Award className="h-5 w-5 text-amber-300" />
                   <span>Top Rated Blockbusters</span>
                 </h2>
               </div>
@@ -489,7 +474,7 @@ export default function App() {
                     key={movie.id}
                     whileHover={{ y: -6 }}
                     onClick={() => setSelectedMovie(movie)}
-                    className="bg-slate-900/60 border border-slate-800/80 hover:border-purple-500/40 rounded-2xl overflow-hidden cursor-pointer group flex flex-col justify-between transition-all shadow-md"
+                    className="acrylic-card hover:border-purple-300/30 rounded-2xl overflow-hidden cursor-pointer group flex flex-col justify-between transition-all"
                   >
                     <div className="relative aspect-[2/3] overflow-hidden">
                       <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -497,19 +482,19 @@ export default function App() {
                         onClick={(e) => toggleWatchlist(movie, e)}
                         className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md border transition-all ${
                           isMovieInWatchlist(movie.id)
-                            ? 'bg-purple-600 border-purple-500 text-white'
-                            : 'bg-slate-950/60 border-slate-700/80 text-slate-300 hover:text-white'
+                            ? 'pastel-btn-gradient text-white border-transparent'
+                            : 'bg-slate-900/60 border-white/10 text-slate-300 hover:text-white'
                         }`}
                       >
                         <Heart className={`h-3.5 w-3.5 ${isMovieInWatchlist(movie.id) ? 'fill-white' : ''}`} />
                       </button>
-                      <div className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-amber-400 flex items-center">
-                        <Star className="h-3 w-3 fill-amber-400 mr-1" />
+                      <div className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-amber-300 flex items-center">
+                        <Star className="h-3 w-3 fill-amber-300 mr-1" />
                         {movie.rating}
                       </div>
                     </div>
                     <div className="p-4 space-y-1">
-                      <h3 className="font-bold text-sm text-white group-hover:text-purple-300 transition-colors truncate">{movie.title}</h3>
+                      <h3 className="font-bold text-sm text-white group-hover:text-purple-200 transition-colors truncate">{movie.title}</h3>
                       <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
                         <span>{movie.genre}</span>
                         <span>{movie.year}</span>
@@ -528,13 +513,13 @@ export default function App() {
           <div className="space-y-10">
             <div className="space-y-2">
               <h1 className="text-3xl font-black text-white">Discover Movies</h1>
-              <p className="text-xs text-slate-400">Search and filter movies by genre, minimum rating, and sorting options</p>
+              <p className="text-xs text-slate-400">Filter through our collection with soft acrylic search controls</p>
             </div>
 
             {/* FILTERS TOOLBAR */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+            <div className="acrylic-card rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
               
-              {/* Search Input */}
+              {/* Search Bar */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -542,14 +527,14 @@ export default function App() {
                   placeholder="Search by title, overview, or cast..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl text-sm bg-slate-950 border border-slate-800 text-white outline-none focus:border-purple-500 transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl text-sm bg-slate-900/80 border border-white/10 text-white outline-none focus:border-purple-300/50 transition-all"
                 />
               </div>
 
               {/* Genre Pills */}
               <div className="space-y-3">
                 <label className="text-xs font-semibold text-slate-400 flex items-center space-x-1.5">
-                  <Filter className="h-3.5 w-3.5 text-purple-400" />
+                  <Filter className="h-3.5 w-3.5 text-purple-300" />
                   <span>Genre Filter</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -559,8 +544,8 @@ export default function App() {
                       onClick={() => setSelectedGenre(genre)}
                       className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
                         selectedGenre === genre
-                          ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-105'
-                          : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
+                          ? 'pastel-btn-gradient text-white shadow-md shadow-purple-500/20 scale-105'
+                          : 'bg-white/5 border border-white/10 text-slate-400 hover:text-white'
                       }`}
                     >
                       {genre}
@@ -570,13 +555,13 @@ export default function App() {
               </div>
 
               {/* Rating & Sort Controls */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-white/5">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-slate-400">Minimum Rating ({selectedRating}+ ⭐)</label>
                   <select
                     value={selectedRating}
                     onChange={(e) => setSelectedRating(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-purple-500"
+                    className="w-full bg-slate-900/80 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-purple-300/50"
                   >
                     <option value={0}>All Ratings</option>
                     <option value={8.5}>8.5+ Exceptional</option>
@@ -590,7 +575,7 @@ export default function App() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-purple-500"
+                    className="w-full bg-slate-900/80 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-purple-300/50"
                   >
                     <option value="popularity">Popularity</option>
                     <option value="rating">Rating (High to Low)</option>
@@ -608,8 +593,8 @@ export default function App() {
               </div>
 
               {filteredMovies.length === 0 ? (
-                <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-slate-800 space-y-3">
-                  <Clapperboard className="h-12 w-12 text-slate-600 mx-auto" />
+                <div className="text-center py-20 acrylic-card rounded-3xl space-y-3">
+                  <Clapperboard className="h-12 w-12 text-slate-500 mx-auto" />
                   <h3 className="text-base font-semibold text-white">No movies found</h3>
                   <p className="text-xs text-slate-400">Try adjusting your search query or genre filter.</p>
                 </div>
@@ -620,7 +605,7 @@ export default function App() {
                       key={movie.id}
                       whileHover={{ y: -6 }}
                       onClick={() => setSelectedMovie(movie)}
-                      className="bg-slate-900/60 border border-slate-800/80 hover:border-purple-500/40 rounded-2xl overflow-hidden cursor-pointer group flex flex-col justify-between transition-all shadow-md"
+                      className="acrylic-card hover:border-purple-300/30 rounded-2xl overflow-hidden cursor-pointer group flex flex-col justify-between transition-all"
                     >
                       <div className="relative aspect-[2/3] overflow-hidden">
                         <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
@@ -628,18 +613,18 @@ export default function App() {
                           onClick={(e) => toggleWatchlist(movie, e)}
                           className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md border transition-all ${
                             isMovieInWatchlist(movie.id)
-                              ? 'bg-purple-600 border-purple-500 text-white'
-                              : 'bg-slate-950/60 border-slate-700/80 text-slate-300 hover:text-white'
+                              ? 'pastel-btn-gradient text-white border-transparent'
+                              : 'bg-slate-900/60 border-white/10 text-slate-300 hover:text-white'
                           }`}
                         >
                           <Heart className={`h-3.5 w-3.5 ${isMovieInWatchlist(movie.id) ? 'fill-white' : ''}`} />
                         </button>
                       </div>
                       <div className="p-4 space-y-1">
-                        <h3 className="font-bold text-sm text-white group-hover:text-purple-300 transition-colors truncate">{movie.title}</h3>
+                        <h3 className="font-bold text-sm text-white group-hover:text-purple-200 transition-colors truncate">{movie.title}</h3>
                         <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
                           <span>{movie.genre}</span>
-                          <span className="text-amber-400 font-bold flex items-center"><Star className="h-3 w-3 fill-amber-400 mr-0.5" />{movie.rating}</span>
+                          <span className="text-amber-300 font-bold flex items-center"><Star className="h-3 w-3 fill-amber-300 mr-0.5" />{movie.rating}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -653,7 +638,7 @@ export default function App() {
         {/* ==================== TAB 3: WATCHLIST PAGE ==================== */}
         {activeTab === 'watchlist' && (
           <div className="space-y-10">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
               <div>
                 <h1 className="text-3xl font-black text-white">Your Watchlist</h1>
                 <p className="text-xs text-slate-400">Movies saved to LocalStorage for later viewing</p>
@@ -661,7 +646,7 @@ export default function App() {
               {watchlist.length > 0 && (
                 <button
                   onClick={() => setWatchlist([])}
-                  className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 text-xs font-semibold transition-all flex items-center space-x-1.5"
+                  className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/20 text-xs font-semibold transition-all flex items-center space-x-1.5"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   <span>Clear All</span>
@@ -670,9 +655,9 @@ export default function App() {
             </div>
 
             {watchlist.length === 0 ? (
-              <div className="text-center py-24 bg-slate-900/40 rounded-3xl border border-slate-800 space-y-4 max-w-md mx-auto">
-                <div className="h-16 w-16 rounded-full bg-purple-600/10 border border-purple-500/20 flex items-center justify-center mx-auto text-purple-400">
-                  <Heart className="h-8 w-8 text-purple-400" />
+              <div className="text-center py-24 acrylic-card rounded-3xl space-y-4 max-w-md mx-auto">
+                <div className="h-16 w-16 rounded-full bg-purple-300/10 border border-purple-300/20 flex items-center justify-center mx-auto text-purple-300">
+                  <Heart className="h-8 w-8 text-purple-300" />
                 </div>
                 <h3 className="text-lg font-bold text-white">No movies in your watchlist yet</h3>
                 <p className="text-xs text-slate-400 leading-relaxed px-6">
@@ -680,7 +665,7 @@ export default function App() {
                 </p>
                 <button
                   onClick={() => setActiveTab('discover')}
-                  className="px-6 py-3 rounded-full bg-purple-600 text-white text-xs font-semibold shadow-lg shadow-purple-600/30 hover:scale-105 transition-all"
+                  className="px-6 py-3 rounded-full pastel-btn-gradient text-white text-xs font-semibold shadow-md shadow-purple-500/20 hover:scale-105 transition-all"
                 >
                   Discover Movies
                 </button>
@@ -692,13 +677,13 @@ export default function App() {
                     key={movie.id}
                     whileHover={{ y: -6 }}
                     onClick={() => setSelectedMovie(movie)}
-                    className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden cursor-pointer group flex flex-col justify-between"
+                    className="acrylic-card rounded-2xl overflow-hidden cursor-pointer group flex flex-col justify-between"
                   >
                     <div className="relative aspect-[2/3]">
                       <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
                       <button
                         onClick={(e) => toggleWatchlist(movie, e)}
-                        className="absolute top-3 right-3 p-2 rounded-full bg-red-600 text-white border border-red-500 shadow-md"
+                        className="absolute top-3 right-3 p-2 rounded-full bg-red-500/80 text-white border border-red-400/40 shadow-md"
                         title="Remove from Watchlist"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -708,7 +693,7 @@ export default function App() {
                       <h3 className="font-bold text-sm text-white truncate">{movie.title}</h3>
                       <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
                         <span>{movie.genre}</span>
-                        <span className="text-amber-400 font-bold flex items-center"><Star className="h-3 w-3 fill-amber-400 mr-0.5" />{movie.rating}</span>
+                        <span className="text-amber-300 font-bold flex items-center"><Star className="h-3 w-3 fill-amber-300 mr-0.5" />{movie.rating}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -728,18 +713,18 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedMovie(null)}
-              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+              className="fixed inset-0 bg-[#0b0f19]/80 backdrop-blur-xl"
             />
 
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl z-10 my-auto"
+              className="relative w-full max-w-3xl bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl z-10 my-auto"
             >
               <button
                 onClick={() => setSelectedMovie(null)}
-                className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-950/80 text-slate-400 hover:text-white border border-slate-800"
+                className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-950/80 text-slate-400 hover:text-white border border-white/10"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -749,14 +734,14 @@ export default function App() {
                 <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
                   <div>
                     <h2 className="text-2xl sm:text-4xl font-extrabold text-white">{selectedMovie.title}</h2>
-                    <p className="text-xs text-purple-300 font-mono mt-1">{selectedMovie.genres.join(' • ')}</p>
+                    <p className="text-xs text-purple-200 font-mono mt-1">{selectedMovie.genres.join(' • ')}</p>
                   </div>
                   <button
                     onClick={() => {
                       setActiveTrailerId(selectedMovie.trailerId);
                       setSelectedMovie(null);
                     }}
-                    className="px-5 py-2.5 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs flex items-center space-x-2 shadow-lg shadow-purple-600/30"
+                    className="px-5 py-2.5 rounded-full pastel-btn-gradient text-white font-semibold text-xs flex items-center space-x-2 shadow-md shadow-purple-500/20"
                   >
                     <Play className="h-4 w-4 fill-white" />
                     <span>Trailer</span>
@@ -765,8 +750,8 @@ export default function App() {
               </div>
 
               <div className="p-6 sm:p-8 space-y-6">
-                <div className="flex flex-wrap gap-4 text-xs text-slate-300 border-b border-slate-800 pb-4">
-                  <span className="flex items-center text-amber-400 font-bold"><Star className="h-4 w-4 fill-amber-400 mr-1" />{selectedMovie.rating}</span>
+                <div className="flex flex-wrap gap-4 text-xs text-slate-300 border-b border-white/5 pb-4">
+                  <span className="flex items-center text-amber-300 font-bold"><Star className="h-4 w-4 fill-amber-300 mr-1" />{selectedMovie.rating}</span>
                   <span className="flex items-center"><Calendar className="h-3.5 w-3.5 mr-1 text-slate-400" />{selectedMovie.year}</span>
                   <span className="flex items-center"><Clock className="h-3.5 w-3.5 mr-1 text-slate-400" />{selectedMovie.runtime}</span>
                   <span className="flex items-center"><User className="h-3.5 w-3.5 mr-1 text-slate-400" />Dir: {selectedMovie.director}</span>
@@ -781,7 +766,7 @@ export default function App() {
                   <h3 className="text-sm font-semibold text-white">Main Cast</h3>
                   <div className="flex flex-wrap gap-2">
                     {selectedMovie.cast.map((actor) => (
-                      <span key={actor} className="px-3 py-1 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300">
+                      <span key={actor} className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-300">
                         {actor}
                       </span>
                     ))}
@@ -802,16 +787,16 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActiveTrailerId(null)}
-              className="fixed inset-0 bg-slate-950/90 backdrop-blur-lg"
+              className="fixed inset-0 bg-[#0b0f19]/90 backdrop-blur-xl"
             />
 
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-4xl bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl z-10"
+              className="relative w-full max-w-4xl bg-[#0b0f19] border border-white/10 rounded-3xl overflow-hidden shadow-2xl z-10"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
                 <span className="font-bold text-sm text-white">Movie Trailer Preview</span>
                 <button
                   onClick={() => setActiveTrailerId(null)}
@@ -836,13 +821,13 @@ export default function App() {
       </AnimatePresence>
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-10 text-xs text-slate-500">
+      <footer className="border-t border-white/5 bg-[#0b0f19] py-10 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
-            <Film className="h-4 w-4 text-purple-500" />
-            <span className="font-bold text-slate-300">Conquerors 03 Movie — CineVault Platform</span>
+            <Film className="h-4 w-4 text-purple-300" />
+            <span className="font-bold text-slate-300">Conquerors 03 Movie — Pastel & Acrylic CineVault</span>
           </div>
-          <p>© 2026 Conquerors 03 Movie Discovery & Watchlist. Built with React & Tailwind.</p>
+          <p>© 2026 Conquerors 03 Movie Discovery & Watchlist.</p>
         </div>
       </footer>
     </div>
